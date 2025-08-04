@@ -1,0 +1,122 @@
+{
+  "templates": {
+    "en_prompt_main": {
+      "id": "en_prompt_main",
+      "name": "默认英文模板",
+      "description": "系统默认的英文提示词模板",
+      "language": "en",
+      "content": "# Knowledge Graph Extraction Prompt\n\n## 1. Overview\nYou are a top-tier information extraction model, specialized in extracting structured information from unstructured text for building knowledge graphs.\n- **Goal**: Identify entities (nodes) and their relationships in the text.\n- **Output Format**: JSON format containing `nodes` and `relationships`.\n\n## 2. Output Structure\n{\n  \"nodes\": [\n    {\n      \"id\": \"unique entity ID, e.g., disease_001\",\n      \"name\": \"entity name, e.g., hypertension\",\n      \"type\": \"entity type, e.g., disease, drug, person, organization\",\n      \"aliases\": [\"alias1\", \"alias2\"],\n      \"definition\": \"brief definition of the entity (extracted from text)\",\n      \"attributes\": {\n        \"attribute1\": [\"value1\", \"value2\"],\n        \"attribute2\": [\"value1\", \"value2\"]\n      }\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source\": \"source entity ID\",\n      \"target\": \"target entity ID\",\n      \"type\": \"relationship type, e.g., treats, belongs_to, founder_of\"\n    }\n  ]\n}\n\n## 3. Allowed Triplets\n- Only extract the following triplet types:\n{% for triplet in allowed_triplets %}\n- {{ triplet }}\n{% endfor %}\n\n## 4. Input Text\n{{ text }}\n\nPlease extract the knowledge graph according to the above requirements.",
+      "version": "1.0.0",
+      "is_active": true,
+      "created_at": "2025-08-04 11:54:19.723830",
+      "updated_at": "2025-08-04 11:54:19.723830",
+      "tags": [
+        "默认",
+        "英文"
+      ],
+      "metadata": {
+        "is_default": true
+      }
+    },
+    "zh_prompt_main": {
+      "id": "zh_prompt_main",
+      "name": "中文主模板",
+      "description": "从templates/zh_prompt.j2转储的中文提示词模板",
+      "language": "zh",
+      "content": "# Knowledge Graph Extraction Prompt \n\n## 1. Overview\n你是一个顶级信息抽取模型，专门从非结构化文本中提取结构化信息，用于构建知识图谱。\n- **目标**：识别文本中的实体（节点）和它们之间的关系。\n- **输出格式**：JSON 格式，包含 `nodes` 和 `relationships`。\n- **输出结构如下所示**：\n\n{\n  \"nodes\": [\n    {\n      \"id\": \"实体唯一ID，如 disease_001\",\n      \"name\": \"实体名称，如 高血压\",\n      \"type\": \"实体类型，如 疾病、药物、人物、组织\",\n      \"aliases\": [\"别名1\", \"别名2\"],\n      \"definition\": \"实体简要定义（从文本中提取）\",\n      \"attributes\": {\n        \"属性名1\": [\"值1\", \"值2\"],\n        \"属性名2\": [\"值1\", \"值2\"]\n      }\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source\": \"源实体ID\",\n      \"target\": \"目标实体ID\",\n      \"type\": \"关系类型，如 作用于、属于、创立者等\"\n    }\n  ]\n}\n\n## 2. Few-shot 示例（作为标准输出参考）\n\n{\n  \"nodes\": [\n    {\n      \"id\": \"disease_001\",\n      \"name\": \"流感\",\n      \"type\": \"疾病\",\n      \"aliases\": [\"流行性感冒\", \"flu\", \"Influenza\"],\n      \"definition\": \"流感是由流感病毒引起的急性呼吸道传染病。\",\n      \"attributes\": {\n        \"症状\": [\"发烧\", \"咳嗽\", \"喉咙痛\"],\n        \"传播途径\": [\"空气飞沫\", \"接触传播\"],\n        \"治疗方法\": [\"抗病毒药物\"],\n        \"发病部位\": [\"上呼吸道\"]\n      }\n    },\n    {\n      \"id\": \"person_xm_001\",\n      \"name\": \"小明\",\n      \"type\": \"人物\",\n      \"definition\": \"帅气且多金的小明，是清华大学的毕业生，曾获“十大杰出青年”称号，目前就职于字节跳动，担任技术副总监。\",\n      \"aliases\": [],\n      \"attributes\": {\n        \"外貌\": [\"帅气\"],\n        \"经济状态\": [\"多金\"],\n        \"学历\": [\"清华大学\"],\n        \"荣誉\": [\"十大杰出青年\"],\n        \"工作单位\": [\"字节跳动\"],\n        \"职位\": [\"技术副总监\"],\n        \"兴趣爱好\": [\"极限运动\"],\n        \"价值观/关注点\": [\"环保\"]\n      }\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source\": \"disease_001\",\n      \"target\": \"drug_023\",\n      \"type\": \"治疗方法\"\n    }\n  ]\n}\n## 3. 节点标注规则\n\n- **一致性（Consistency）**：统一使用规范的实体类型标签，如\"人物\"、\"组织\"、\"事件\"、\"概念\"等。\n- **节点ID（Node IDs）**：采用 `类型_编号` 格式的唯一ID，例如 `person_001`、`organization_002`。\n- **节点名称（Node Names）**：使用中文名称，如\"爱因斯坦\"、\"联合国\"。\n- **别名（Aliases）**：包含中英文别名或简称，例如 [\"UN\", \"联合国组织\"]。\n- **定义（Definition）**：提供实体的简要定义或描述。\n- **属性（Attributes）**：属性提取目标是**\"信息最大覆盖\"**，需注意：\n\n  - 尽可能保留实体相关的所有描述性信息，不遗漏任何可提取的词语或短语\n  - 属性名可采用：\n    * 描述性短语（如\"主要成就\"、\"地理特征\"）\n    * 来源文本的关键词\n    * 泛化属性名（如\"其他信息\"、\"标签\"、\"背景信息\"）用于难以归类的信息\n  - 所有属性值必须为字符串数组格式，即使仅有一个值也需写为数组形式。\n\n## 4. Allowed Triplets (三元组限定)\n- 只允许抽取下列三元组类型：\n{% for triplet in allowed_triplets %}\n- {{ triplet }}\n{% endfor %}\n\n## 5. Coreference Resolution\n- 如果一个实体在文本中被多次提及（如“他”、“该组织”），始终使用最完整的名称作为 ID。\n- 示例：若首次提到“爱因斯坦”，后续提到“他”，统一使用“爱因斯坦”作为实体名称和 ID。\n\n## 6. Output Format\n- 输出必须为 JSON 格式，不能包含任何解释或额外文本。\n- 不使用 Markdown 格式，直接输出 JSON。\n- 保持属性值为数组形式，即使只有一个值。\n\n## 7. Strict Compliance\n- 必须严格按照格式输出，否则将导致解析失败。\n\nUse the given format to extract information from the following input: {{ text }}",
+      "version": "1.0.0",
+      "is_active": false,
+      "created_at": "2025-01-27 10:00:00.000000",
+      "updated_at": "2025-01-27 10:00:00.000000",
+      "tags": [
+        "中文",
+        "主模板",
+        "转储"
+      ],
+      "metadata": {
+        "source_file": "templates/zh_prompt.j2",
+        "is_default": true
+      }
+    },
+    "zh_prompt_variant_1": {
+      "id": "zh_prompt_variant_1",
+      "name": "中文模板变体1",
+      "description": "从templates/zh_prompt _1.j2转储的中文提示词模板变体",
+      "language": "zh",
+      "content": "# Knowledge Graph Extraction Prompt \n\n## 1. Overview\n你是一个顶级信息抽取模型，专门从非结构化文本中提取结构化信息，用于构建知识图谱。\n- **目标**：识别文本中的实体（节点）和它们之间的关系。\n- **输出格式**：JSON 格式，包含 `nodes` 和 `relationships`。\n- **输出结构如下所示**：\n\n{\n  \"nodes\": [\n    {\n      \"id\": \"唯一标识符\",\n      \"name\": \"实体名称\",\n      \"type\": \"实体类型（如人物、组织、疾病、事件）\",\n      \"aliases\": [\"别名1\", \"别名2\"],\n      \"definition\": \"实体的定义或描述\",\n      \"attributes\": {\n        \"属性名1\": [\"值1\", \"值2\"],\n        \"属性名2\": [\"值1\", \"值2\"]\n      }\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source\": \"源实体ID\",\n      \"target\": \"目标实体ID\",\n      \"type\": \"关系类型\"\n    }\n  ]\n}\n\n## 2. Node Labeling Rules\n- **Consistency**：使用统一的实体类型标签，如 \"人物\"、\"组织\"、\"事件\"、\"概念\" 等。\n- **Node IDs**：使用格式为 `类型_编号` 的唯一 ID，如 `person_001`, `organization_002`。\n- **Node Names**：使用中文名称，如 \"爱因斯坦\"、\"联合国\"。\n- **Aliases**：包括中英文别名或简称，如 [\"UN\", \"联合国组织\"]。\n- **Definition**：提供实体的简要定义或描述。\n- **Attributes**：属性应包括但不限于出生日期、职位、所属国家、症状、作用机制等。\n\n## 3. Allowed Nodes and Relations\n- **Allowed Node Types**: {{ allowed_node_types | join(', ') }}\n- **Allowed Relationship Types**: {{ allowed_relations | join(', ') }}\n\n## 4. Coreference Resolution\n- 如果一个实体在文本中被多次提及（如“他”、“该组织”），始终使用最完整的名称作为 ID。\n- 示例：若首次提到“爱因斯坦”，后续提到“他”，统一使用“爱因斯坦”作为实体名称和 ID。\n\n## 5. Output Format\n- 输出必须为 JSON 格式，不能包含任何解释或额外文本。\n- 不使用 Markdown 格式，直接输出 JSON。\n- 保持属性值为数组形式，即使只有一个值。\n\n## 6. Strict Compliance\n- 必须严格按照格式输出，否则将导致解析失败。\n\nUse the given format to extract information from the following input: {{ text }}",
+      "version": "1.0.0",
+      "is_active": false,
+      "created_at": "2025-01-27 10:00:00.000000",
+      "updated_at": "2025-01-27 10:00:00.000000",
+      "tags": [
+        "中文",
+        "变体2",
+        "转储"
+      ],
+      "metadata": {
+        "source_file": "templates/zh_prompt _1.j2",
+        "is_default": false
+      }
+    },
+    "zh_prompt_variant_2": {
+      "id": "zh_prompt_variant_2",
+      "name": "中文模板变体2",
+      "description": "从templates/zh_prompt 2.j2转储的中文提示词模板变体",
+      "language": "zh",
+      "content": "# Knowledge Graph Extraction Prompt \n\n## 1. Overview\n你是一个顶级信息抽取模型，专门从非结构化文本中提取结构化信息，用于构建知识图谱。\n- **目标**：识别文本中的实体（节点）和它们之间的关系。\n- **输出格式**：JSON 格式，包含 `nodes` 和 `relationships`。\n- **输出结构如下所示**：\n\n{\n  \"nodes\": [\n    {\n      \"id\": \"唯一标识符\",\n      \"name\": \"实体名称\",\n      \"type\": \"实体类型（如人物、组织、疾病、事件）\",\n      \"aliases\": [\"别名1\", \"别名2\"],\n      \"definition\": \"实体的定义或描述\",\n      \"attributes\": {\n        \"属性名1\": [\"值1\", \"值2\"],\n        \"属性名2\": [\"值1\", \"值2\"]\n      }\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source\": \"源实体ID\",\n      \"target\": \"目标实体ID\",\n      \"type\": \"关系类型\"\n    }\n  ]\n}\n\n## 2. Node Labeling Rules\n- **Consistency**：使用统一的实体类型标签，如 \"人物\"、\"组织\"、\"事件\"、\"概念\" 等。\n- **Node IDs**：使用格式为 `类型_编号` 的唯一 ID，如 `person_001`, `organization_002`。\n- **Node Names**：使用中文名称，如 \"爱因斯坦\"、\"联合国\"。\n- **Aliases**：包括中英文别名或简称，如 [\"UN\", \"联合国组织\"]。\n- **Definition**：提供实体的简要定义或描述。\n- **Attributes**：属性应包括但不限于出生日期、职位、所属国家、症状、作用机制等。\n\n## 3. Allowed Triplets (三元组限定)\n- 只允许抽取下列三元组类型：\n{% for triplet in allowed_triplets %}\n- {{ triplet }}\n{% endfor %}\n\n## 4. Coreference Resolution\n- 如果一个实体在文本中被多次提及（如“他”、“该组织”），始终使用最完整的名称作为 ID。\n- 示例：若首次提到“爱因斯坦”，后续提到“他”，统一使用“爱因斯坦”作为实体名称和 ID。\n\n## 5. Output Format\n- 输出必须为 JSON 格式，不能包含任何解释或额外文本。\n- 不使用 Markdown 格式，直接输出 JSON。\n- 保持属性值为数组形式，即使只有一个值。\n\n## 6. Strict Compliance\n- 必须严格按照格式输出，否则将导致解析失败。\n\nUse the given format to extract information from the following input: {{ text }}",
+      "version": "1.0.0",
+      "is_active": false,
+      "created_at": "2025-01-27 10:00:00.000000",
+      "updated_at": "2025-01-27 10:00:00.000000",
+      "tags": [
+        "中文",
+        "变体3",
+        "转储"
+      ],
+      "metadata": {
+        "source_file": "templates/zh_prompt 2.j2",
+        "is_default": false
+      }
+    },
+    "zh_prompt_variant_3": {
+      "id": "zh_prompt_variant_3",
+      "name": "中文模板变体3",
+      "description": "从templates/zh_prompt 3.j2转储的中文提示词模板变体",
+      "language": "zh",
+      "content": "# Knowledge Graph Extraction Prompt \n\n## 1. Overview\n你是一个顶级信息抽取模型，专门从非结构化文本中提取结构化信息，用于构建知识图谱。\n- **目标**：识别文本中的实体（节点）和它们之间的关系。\n- **输出格式**：JSON 格式，包含 `nodes` 和 `relationships`。\n- **输出结构如下所示**：\n\n{\n  \"nodes\": [\n    {\n      \"id\": \"实体唯一ID，如 disease_001\",\n      \"name\": \"实体名称，如 高血压\",\n      \"type\": \"实体类型，如 疾病、药物、人物、组织\",\n      \"aliases\": [\"别名1\", \"别名2\"],\n      \"definition\": \"实体简要定义（从文本中提取）\",\n      \"attributes\": {\n        \"属性名1\": [\"值1\", \"值2\"],\n        \"属性名2\": [\"值1\", \"值2\"]\n      }\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source\": \"源实体ID\",\n      \"target\": \"目标实体ID\",\n      \"type\": \"关系类型，如 作用于、属于、创立者等\"\n    }\n  ]\n}\n\n## 2. Few-shot 示例（作为标准输出参考）\n\n{\n  \"nodes\": [\n    {\n      \"id\": \"disease_001\",\n      \"name\": \"流感\",\n      \"type\": \"疾病\",\n      \"aliases\": [\"流行性感冒\", \"flu\", \"Influenza\"],\n      \"definition\": \"流感是由流感病毒引起的急性呼吸道传染病。\",\n      \"attributes\": {\n        \"症状\": [\"发烧\", \"咳嗽\", \"喉咙痛\"],\n        \"传播途径\": [\"空气飞沫\", \"接触传播\"],\n        \"治疗方法\": [\"抗病毒药物\"],\n        \"发病部位\": [\"上呼吸道\"]\n      }\n    },\n    {\n      \"id\": \"person_xm_001\",\n      \"name\": \"小明\",\n      \"type\": \"人物\",\n      \"definition\": \"帅气且多金的小明，是清华大学的毕业生，曾获“十大杰出青年”称号，目前就职于字节跳动，担任技术副总监。\",\n      \"aliases\": [],\n      \"attributes\": {\n        \"外貌\": [\"帅气\"],\n        \"经济状态\": [\"多金\"],\n        \"学历\": [\"清华大学\"],\n        \"荣誉\": [\"十大杰出青年\"],\n        \"工作单位\": [\"字节跳动\"],\n        \"职位\": [\"技术副总监\"],\n        \"兴趣爱好\": [\"极限运动\"],\n        \"价值观/关注点\": [\"环保\"]\n      }\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source\": \"disease_001\",\n      \"target\": \"drug_023\",\n      \"type\": \"治疗方法\"\n    }\n  ]\n}\n\n## 3. 节点标注规则\n\n- **一致性（Consistency）**：统一使用规范的实体类型标签，如“人物”、“组织”、“事件”、“概念”等。\n- **节点ID（Node IDs）**：采用 `类型_编号` 格式的唯一ID，例如 `person_001`、`organization_002`。\n- **节点名称（Node Names）**：使用中文名称，如“爱因斯坦”、“联合国”。\n- **别名（Aliases）**：包含中英文别名或简称，例如 [\"UN\", \"联合国组织\"]。\n- **定义（Definition）**：提供实体的简要定义或描述。\n- **属性（Attributes）**：根据实体类型，优先抽取以下常见属性（不限于此）：\n\n  - **人物（Person）**：出生日期、国籍、职位、学历、主要成就、所属机构\n  - **组织（Organization）**：成立时间、总部地点、行业领域、代表人物、创始人\n  - **疾病（Disease）**：症状、发病部位、传播途径、治疗方法、病因、易感人群、ICD编码\n  - **药物（Drug）**：适应症、作用机制、使用方法、不良反应、禁忌\n  - **地点（Location）**：所属国家、省市、地理特征、人口、气候\n\n  - 所有属性值必须为字符串数组格式，即使仅有一个值也需写为数组形式。\n\n## 4. Allowed Triplets (三元组限定)\n- 只允许抽取下列三元组类型：\n{% for triplet in allowed_triplets %}\n- {{ triplet }}\n{% endfor %}\n\n## 5. Coreference Resolution\n- 如果一个实体在文本中被多次提及（如“他”、“该组织”），始终使用最完整的名称作为 ID。\n- 示例：若首次提到“爱因斯坦”，后续提到“他”，统一使用“爱因斯坦”作为实体名称和 ID。\n\n## 6. Output Format\n- 输出必须为 JSON 格式，不能包含任何解释或额外文本。\n- 不使用 Markdown 格式，直接输出 JSON。\n- 保持属性值为数组形式，即使只有一个值。\n\n## 7. Strict Compliance\n- 必须严格按照格式输出，否则将导致解析失败。\n\nUse the given format to extract information from the following input: {{ text }}",
+      "version": "1.0.0",
+      "is_active": false,
+      "created_at": "2025-01-27 10:00:00.000000",
+      "updated_at": "2025-01-27 10:00:00.000000",
+      "tags": [
+        "中文",
+        "变体4",
+        "转储"
+      ],
+      "metadata": {
+        "source_file": "templates/zh_prompt 3.j2",
+        "is_default": false
+      }
+    },
+    "zh_prompt_variant_4": {
+      "id": "zh_prompt_variant_4",
+      "name": "中文模板变体4",
+      "description": "从templates/zh_prompt 4.j2转储的中文提示词模板变体",
+      "language": "zh",
+      "content": "# Knowledge Graph Extraction Prompt \n\n## 1. Overview\n你是一个顶级信息抽取模型，专门从非结构化文本中提取结构化信息，用于构建知识图谱。\n- **目标**：识别文本中的实体（节点）和它们之间的关系。\n- **输出格式**：JSON 格式，包含 `nodes` 和 `relationships`。\n- **输出结构如下所示**：\n\n{\n  \"nodes\": [\n    {\n      \"id\": \"实体唯一ID，如 disease_001\",\n      \"name\": \"实体名称，如 高血压\",\n      \"type\": \"实体类型，如 疾病、药物、人物、组织\",\n      \"aliases\": [\"别名1\", \"别名2\"],\n      \"definition\": \"实体简要定义（从文本中提取）\",\n      \"attributes\": {\n        \"属性名1\": [\"值1\", \"值2\"],\n        \"属性名2\": [\"值1\", \"值2\"]\n      }\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source\": \"源实体ID\",\n      \"target\": \"目标实体ID\",\n      \"type\": \"关系类型，如 作用于、属于、创立者等\"\n    }\n  ]\n}\n\n## 2. Few-shot 示例（作为标准输出参考）\n\n{\n  \"nodes\": [\n    {\n      \"id\": \"disease_001\",\n      \"name\": \"流感\",\n      \"type\": \"疾病\",\n      \"aliases\": [\"流行性感冒\", \"flu\", \"Influenza\"],\n      \"definition\": \"流感是由流感病毒引起的急性呼吸道传染病。\",\n      \"attributes\": {\n        \"症状\": [\"发烧\", \"咳嗽\", \"喉咙痛\"],\n        \"传播途径\": [\"空气飞沫\", \"接触传播\"],\n        \"治疗方法\": [\"抗病毒药物\"],\n        \"发病部位\": [\"上呼吸道\"]\n      }\n    },\n    {\n      \"id\": \"person_xm_001\",\n      \"name\": \"小明\",\n      \"type\": \"人物\",\n      \"definition\": \"帅气且多金的小明，是清华大学的毕业生，曾获“十大杰出青年”称号，目前就职于字节跳动，担任技术副总监。\",\n      \"aliases\": [],\n      \"attributes\": {\n        \"外貌\": [\"帅气\"],\n        \"经济状态\": [\"多金\"],\n        \"学历\": [\"清华大学\"],\n        \"荣誉\": [\"十大杰出青年\"],\n        \"工作单位\": [\"字节跳动\"],\n        \"职位\": [\"技术副总监\"],\n        \"兴趣爱好\": [\"极限运动\"],\n        \"价值观/关注点\": [\"环保\"]\n      }\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source\": \"disease_001\",\n      \"target\": \"drug_023\",\n      \"type\": \"治疗方法\"\n    }\n  ]\n}\n## 3. 节点标注规则\n\n- **一致性（Consistency）**：统一使用规范的实体类型标签，如\"人物\"、\"组织\"、\"事件\"、\"概念\"等。\n- **节点ID（Node IDs）**：采用 `类型_编号` 格式的唯一ID，例如 `person_001`、`organization_002`。\n- **节点名称（Node Names）**：使用中文名称，如\"爱因斯坦\"、\"联合国\"。\n- **别名（Aliases）**：包含中英文别名或简称，例如 [\"UN\", \"联合国组织\"]。\n- **定义（Definition）**：提供实体的简要定义或描述。\n- **属性（Attributes）**：属性提取目标是**\"信息最大覆盖\"**，需注意：\n\n  - 尽可能保留实体相关的所有描述性信息，不遗漏任何可提取的词语或短语\n  - 属性名可采用：\n    * 描述性短语（如\"主要成就\"、\"地理特征\"）\n    * 来源文本的关键词\n    * 泛化属性名（如\"其他信息\"、\"标签\"、\"背景信息\"）用于难以归类的信息\n  - 常见实体类型建议属性方向：\n    * **人物**：身份特征、社会关系、成就荣誉、教育背景等\n    * **组织**：时间信息、空间信息、业务属性、人员构成等  \n    * **疾病**：临床表现、诊疗信息、流行病学特征等\n    * **药物**：药理特性、使用信息、安全信息等\n    * **地点**：地理属性、人文特征、行政信息等\n\n  - 所有属性值必须为字符串数组格式，即使仅有一个值也需写为数组形式。\n\n## 4. Allowed Triplets (三元组限定)\n- 只允许抽取下列三元组类型：\n{% for triplet in allowed_triplets %}\n- {{ triplet }}\n{% endfor %}\n\n## 5. Coreference Resolution\n- 如果一个实体在文本中被多次提及（如“他”、“该组织”），始终使用最完整的名称作为 ID。\n- 示例：若首次提到“爱因斯坦”，后续提到“他”，统一使用“爱因斯坦”作为实体名称和 ID。\n\n## 6. Output Format\n- 输出必须为 JSON 格式，不能包含任何解释或额外文本。\n- 不使用 Markdown 格式，直接输出 JSON。\n- 保持属性值为数组形式，即使只有一个值。\n\n## 7. Strict Compliance\n- 必须严格按照格式输出，否则将导致解析失败。\n\nUse the given format to extract information from the following input: {{ text }}",
+      "version": "1.0.0",
+      "is_active": false,
+      "created_at": "2025-01-27 10:00:00.000000",
+      "updated_at": "2025-01-27 10:00:00.000000",
+      "tags": [
+        "中文",
+        "变体5",
+        "转储"
+      ],
+      "metadata": {
+        "source_file": "templates/zh_prompt 4.j2",
+        "is_default": false
+      }
+    }
+  }
+}

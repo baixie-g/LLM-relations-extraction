@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识图谱抽取 - 提示词管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            background-color: #667eea;
+            color: white;
+            border-bottom-color: #4a90e2;
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: #f8f9fa;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea.form-control {
+            min-height: 200px;
+            resize: vertical;
+        }
+        
+        .template-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .template-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .template-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .template-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .template-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .template-description {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .template-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        
+        .tag.active {
+            background: #28a745;
+            color: white;
+        }
+        
+        .template-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>知识图谱抽取系统</h1>
+            <p>动态提示词管理与评估平台</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('overview')">概览</div>
+            <div class="tab" onclick="switchTab('templates')">模板管理</div>
+            <div class="tab" onclick="switchTab('create')">创建模板</div>
+            <div class="tab" onclick="switchTab('evaluate')">模板评估</div>
+        </div>
+        
+        <!-- 概览页面 -->
+        <div id="overview" class="tab-content active">
+            <h2>系统概览</h2>
+            <div class="stats-grid" id="statsGrid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    加载中...
+                </div>
+            </div>
+            
+            <div class="template-card">
+                <h3>快速操作</h3>
+                <div class="template-actions">
+                    <button class="btn" onclick="switchTab('create')">创建新模板</button>
+                    <button class="btn" onclick="switchTab('templates')">查看所有模板</button>
+                    <button class="btn" onclick="switchTab('evaluate')">评估模板</button>
+                </div>
+            </div>
+            
+            <div class="template-card">
+                <h3>模板使用说明</h3>
+                <div style="margin-bottom: 15px;">
+                    <strong>当前激活模板:</strong>
+                    <div id="activeTemplatesInfo">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>API使用:</strong>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>默认使用中文模板 (language="zh")</li>
+                        <li>可在请求中指定 language 参数选择模板</li>
+                        <li>支持的语言: zh (中文), en (英文)</li>
+                        <li>每个语言只能有一个激活模板</li>
+                    </ul>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>示例请求:</strong>
+                    <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto;">
+{
+  "text": "输入文本",
+  "schema": {
+    "schema": "medical",
+    "triplet": ["疾病-症状->症状"]
+  },
+  "language": "zh"  // 可选，默认为 "zh"
+}</pre>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 模板管理页面 -->
+        <div id="templates" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>模板管理</h2>
+                <button class="btn" onclick="switchTab('create')">创建新模板</button>
+            </div>
+            
+            <div class="form-group">
+                <input type="text" class="form-control" id="searchInput" placeholder="搜索模板..." onkeyup="searchTemplates()">
+            </div>
+            
+            <div id="templatesList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    加载模板中...
+                </div>
+            </div>
+        </div>
+        
+        <!-- 创建模板页面 -->
+        <div id="create" class="tab-content">
+            <h2>创建新模板</h2>
+            <form id="createForm">
+                <div class="form-group">
+                    <label for="templateName">模板名称 *</label>
+                    <input type="text" class="form-control" id="templateName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="templateDescription">描述</label>
+                    <textarea class="form-control" id="templateDescription" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="templateLanguage">语言 *</label>
+                    <select class="form-control" id="templateLanguage" required>
+                        <option value="zh">中文</option>
+                        <option value="en">英文</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="templateContent">模板内容 *</label>
+                    <textarea class="form-control" id="templateContent" rows="15" required placeholder="请输入Jinja2模板内容..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="templateTags">标签（用逗号分隔）</label>
+                    <input type="text" class="form-control" id="templateTags" placeholder="例如：医疗,疾病,药物">
+                </div>
+                
+                <button type="submit" class="btn">创建模板</button>
+                <button type="button" class="btn btn-secondary" onclick="switchTab('templates')">取消</button>
+            </form>
+        </div>
+        
+        <!-- 模板评估页面 -->
+        <div id="evaluate" class="tab-content">
+            <h2>模板评估</h2>
+            <form id="evaluateForm">
+                <div class="form-group">
+                    <label for="evaluateTemplate">选择模板 *</label>
+                    <select class="form-control" id="evaluateTemplate" required>
+                        <option value="">请选择要评估的模板</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="testTexts">测试文本（每行一个） *</label>
+                    <textarea class="form-control" id="testTexts" rows="8" required placeholder="请输入测试文本，每行一个..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="schemaInfo">Schema信息（JSON格式） *</label>
+                    <textarea class="form-control" id="schemaInfo" rows="6" required placeholder='{"schema": "medical", "triplet": ["疾病-症状->症状", "药物-治疗->疾病"]}'></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>评估指标</label>
+                    <div>
+                        <label><input type="checkbox" value="completeness" checked> 完整性</label>
+                        <label><input type="checkbox" value="accuracy" checked> 准确性</label>
+                        <label><input type="checkbox" value="consistency"> 一致性</label>
+                        <label><input type="checkbox" value="relevance"> 相关性</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn">开始评估</button>
+            </form>
+            
+            <div id="evaluationResult" style="display: none;">
+                <h3>评估结果</h3>
+                <div id="evaluationContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // 切换标签页
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有标签的激活状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(tabName).classList.add('active');
+            
+            // 激活对应的标签
+            event.target.classList.add('active');
+            
+            // 根据标签加载数据
+            if (tabName === 'overview') {
+                loadStatistics();
+            } else if (tabName === 'templates') {
+                loadTemplates();
+            } else if (tabName === 'evaluate') {
+                loadTemplateOptions();
+            }
+        }
+        
+        // 加载统计信息
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_BASE}/prompts/statistics`);
+                const stats = await response.json();
+                
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_templates}</div>
+                        <div class="stat-label">总模板数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.active_templates}</div>
+                        <div class="stat-label">激活模板</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.recent_created}</div>
+                        <div class="stat-label">最近创建</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.recent_updated}</div>
+                        <div class="stat-label">最近更新</div>
+                    </div>
+                `;
+                
+                // 加载激活模板信息
+                await loadActiveTemplatesInfo();
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+                document.getElementById('statsGrid').innerHTML = '<div class="alert alert-error">加载统计信息失败</div>';
+            }
+        }
+        
+        // 加载激活模板信息
+        async function loadActiveTemplatesInfo() {
+            try {
+                const activeTemplatesInfo = document.getElementById('activeTemplatesInfo');
+                const languages = ['zh', 'en'];
+                let activeInfo = '';
+                
+                for (const lang of languages) {
+                    try {
+                        const response = await fetch(`${API_BASE}/prompts/active/${lang}`);
+                        if (response.ok) {
+                            const template = await response.json();
+                            activeInfo += `
+                                <div style="margin-bottom: 10px;">
+                                    <span class="tag">${lang.toUpperCase()}</span>
+                                    <strong>${template.name}</strong>
+                                    <span style="color: #666; font-size: 0.9em;">(${template.description || '无描述'})</span>
+                                </div>
+                            `;
+                        }
+                    } catch (error) {
+                        activeInfo += `
+                            <div style="margin-bottom: 10px;">
+                                <span class="tag">${lang.toUpperCase()}</span>
+                                <span style="color: #999;">无激活模板</span>
+                            </div>
+                        `;
+                    }
+                }
+                
+                activeTemplatesInfo.innerHTML = activeInfo || '<span style="color: #999;">无激活模板</span>';
+            } catch (error) {
+                console.error('加载激活模板信息失败:', error);
+                document.getElementById('activeTemplatesInfo').innerHTML = '<span style="color: #999;">加载失败</span>';
+            }
+        }
+        
+        // 加载模板列表
+        async function loadTemplates() {
+            try {
+                const response = await fetch(`${API_BASE}/prompts`);
+                const data = await response.json();
+                
+                const templatesList = document.getElementById('templatesList');
+                if (data.templates.length === 0) {
+                    templatesList.innerHTML = '<div class="alert">暂无模板</div>';
+                    return;
+                }
+                
+                templatesList.innerHTML = data.templates.map(template => `
+                    <div class="template-card">
+                        <div class="template-header">
+                            <div class="template-title">${template.name}</div>
+                            <div>
+                                ${template.is_active ? '<span class="tag active">激活</span>' : ''}
+                                <span class="tag">${template.language}</span>
+                            </div>
+                        </div>
+                        <div class="template-meta">
+                            <span>版本: ${template.version}</span>
+                            <span>创建: ${new Date(template.created_at).toLocaleDateString()}</span>
+                            <span>更新: ${new Date(template.updated_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="template-description">${template.description || '暂无描述'}</div>
+                        <div class="template-tags">
+                            ${template.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                        <div class="template-actions">
+                            <button class="btn" onclick="viewTemplate('${template.id}')">查看</button>
+                            <button class="btn" onclick="editTemplate('${template.id}')">编辑</button>
+                            ${!template.is_active ? `<button class="btn" onclick="activateTemplate('${template.id}')">激活</button>` : ''}
+                            <button class="btn btn-secondary" onclick="duplicateTemplate('${template.id}')">复制</button>
+                            ${!template.is_active ? `<button class="btn btn-danger" onclick="deleteTemplate('${template.id}')">删除</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载模板失败:', error);
+                document.getElementById('templatesList').innerHTML = '<div class="alert alert-error">加载模板失败</div>';
+            }
+        }
+        
+        // 搜索模板
+        function searchTemplates() {
+            const keyword = document.getElementById('searchInput').value;
+            // 这里可以实现前端搜索或调用后端搜索API
+            console.log('搜索关键词:', keyword);
+        }
+        
+        // 创建模板表单提交
+        document.getElementById('createForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('templateName').value,
+                description: document.getElementById('templateDescription').value,
+                language: document.getElementById('templateLanguage').value,
+                content: document.getElementById('templateContent').value,
+                tags: document.getElementById('templateTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/prompts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    alert('模板创建成功！');
+                    switchTab('templates');
+                    loadTemplates();
+                } else {
+                    const error = await response.json();
+                    alert('创建失败: ' + error.detail);
+                }
+            } catch (error) {
+                console.error('创建模板失败:', error);
+                alert('创建模板失败');
+            }
+        });
+        
+        // 加载模板选项（用于评估）
+        async function loadTemplateOptions() {
+            try {
+                const response = await fetch(`${API_BASE}/prompts`);
+                const data = await response.json();
+                
+                const select = document.getElementById('evaluateTemplate');
+                select.innerHTML = '<option value="">请选择要评估的模板</option>';
+                
+                data.templates.forEach(template => {
+                    const option = document.createElement('option');
+                    option.value = template.id;
+                    option.textContent = `${template.name} (${template.language})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加载模板选项失败:', error);
+            }
+        }
+        
+        // 评估表单提交
+        document.getElementById('evaluateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const selectedMetrics = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+            
+            const formData = {
+                template_id: document.getElementById('evaluateTemplate').value,
+                test_texts: document.getElementById('testTexts').value.split('\n').filter(text => text.trim()),
+                schema_info: JSON.parse(document.getElementById('schemaInfo').value),
+                evaluation_metrics: selectedMetrics
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/prompts/${formData.template_id}/evaluate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    displayEvaluationResult(result);
+                } else {
+                    const error = await response.json();
+                    alert('评估失败: ' + error.detail);
+                }
+            } catch (error) {
+                console.error('评估失败:', error);
+                alert('评估失败');
+            }
+        });
+        
+        // 显示评估结果
+        function displayEvaluationResult(result) {
+            const resultDiv = document.getElementById('evaluationResult');
+            const contentDiv = document.getElementById('evaluationContent');
+            
+            contentDiv.innerHTML = `
+                <div class="template-card">
+                    <h4>${result.template_name}</h4>
+                    <div class="template-meta">
+                        <span>模板ID: ${result.template_id}</span>
+                    </div>
+                    <div class="stats-grid">
+                        ${Object.entries(result.evaluation_results).map(([metric, score]) => `
+                            <div class="stat-card">
+                                <div class="stat-number">${(score * 100).toFixed(1)}%</div>
+                                <div class="stat-label">${metric}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="white-space: pre-line; margin-top: 20px;">${result.summary}</div>
+                </div>
+            `;
+            
+            resultDiv.style.display = 'block';
+        }
+        
+        // 模板操作函数
+        async function activateTemplate(templateId) {
+            if (confirm('确定要激活这个模板吗？')) {
+                try {
+                    const response = await fetch(`${API_BASE}/prompts/${templateId}/activate`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        alert('模板激活成功！');
+                        loadTemplates();
+                    } else {
+                        alert('激活失败');
+                    }
+                } catch (error) {
+                    console.error('激活模板失败:', error);
+                    alert('激活模板失败');
+                }
+            }
+        }
+        
+        async function deleteTemplate(templateId) {
+            if (confirm('确定要删除这个模板吗？此操作不可恢复！')) {
+                try {
+                    const response = await fetch(`${API_BASE}/prompts/${templateId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        alert('模板删除成功！');
+                        loadTemplates();
+                    } else {
+                        alert('删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除模板失败:', error);
+                    alert('删除模板失败');
+                }
+            }
+        }
+        
+        async function duplicateTemplate(templateId) {
+            const newName = prompt('请输入新模板名称：');
+            if (newName) {
+                try {
+                    const response = await fetch(`${API_BASE}/prompts/${templateId}/duplicate?new_name=${encodeURIComponent(newName)}`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        alert('模板复制成功！');
+                        loadTemplates();
+                    } else {
+                        alert('复制失败');
+                    }
+                } catch (error) {
+                    console.error('复制模板失败:', error);
+                    alert('复制模板失败');
+                }
+            }
+        }
+        
+        function viewTemplate(templateId) {
+            // 获取模板详情并显示
+            fetch(`${API_BASE}/prompts/${templateId}`)
+                .then(response => response.json())
+                .then(template => {
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.5);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 1000;
+                    `;
+                    
+                    modal.innerHTML = `
+                        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h2>${template.name}</h2>
+                                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">关闭</button>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>描述:</strong> ${template.description || '无描述'}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>语言:</strong> ${template.language}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>版本:</strong> ${template.version}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>标签:</strong> ${template.tags.join(', ')}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>激活状态:</strong> ${template.is_active ? '是' : '否'}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>创建时间:</strong> ${new Date(template.created_at).toLocaleString()}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>更新时间:</strong> ${new Date(template.updated_at).toLocaleString()}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>模板内容:</strong>
+                                <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap;">${template.content}</pre>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                })
+                .catch(error => {
+                    console.error('获取模板详情失败:', error);
+                    alert('获取模板详情失败');
+                });
+        }
+        
+        function editTemplate(templateId) {
+            // 获取模板详情并进入编辑模式
+            fetch(`${API_BASE}/prompts/${templateId}`)
+                .then(response => response.json())
+                .then(template => {
+                    // 填充表单
+                    document.getElementById('templateName').value = template.name;
+                    document.getElementById('templateDescription').value = template.description;
+                    document.getElementById('templateLanguage').value = template.language;
+                    document.getElementById('templateContent').value = template.content;
+                    document.getElementById('templateTags').value = template.tags.join(', ');
+                    
+                    // 切换到创建页面（复用表单）
+                    switchTab('create');
+                    
+                    // 修改表单提交行为为更新
+                    const form = document.getElementById('createForm');
+                    form.onsubmit = async function(e) {
+                        e.preventDefault();
+                        
+                        const formData = {
+                            name: document.getElementById('templateName').value,
+                            description: document.getElementById('templateDescription').value,
+                            content: document.getElementById('templateContent').value,
+                            tags: document.getElementById('templateTags').value.split(',').map(tag => tag.trim()).filter(tag => tag)
+                        };
+                        
+                        try {
+                            const response = await fetch(`${API_BASE}/prompts/${templateId}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(formData)
+                            });
+                            
+                            if (response.ok) {
+                                alert('模板更新成功！');
+                                // 恢复表单为创建模式
+                                form.onsubmit = null;
+                                form.reset();
+                                switchTab('templates');
+                                loadTemplates();
+                            } else {
+                                const error = await response.json();
+                                alert('更新失败: ' + error.detail);
+                            }
+                        } catch (error) {
+                            console.error('更新模板失败:', error);
+                            alert('更新模板失败');
+                        }
+                    };
+                    
+                    // 修改按钮文本
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    submitBtn.textContent = '更新模板';
+                    
+                    // 添加取消按钮
+                    const cancelBtn = form.querySelector('button[type="button"]');
+                    cancelBtn.onclick = function() {
+                        form.onsubmit = null;
+                        form.reset();
+                        submitBtn.textContent = '创建模板';
+                        switchTab('templates');
+                    };
+                })
+                .catch(error => {
+                    console.error('获取模板详情失败:', error);
+                    alert('获取模板详情失败');
+                });
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+        });
+    </script>
+</body>
+</html> 
